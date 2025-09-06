@@ -2,65 +2,122 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Who's Birthday? — Surprise</title>
   <style>
-    :root{--bg1:#fffaf6;--bg2:#f0f8ff;--accent:#ff6fa3;--accent2:#7c5cff}
-    *{box-sizing:border-box}
+    :root{
+      --bg1:#fffaf6;
+      --bg2:#f0f8ff;
+      --accent:#ff6fa3;
+      --accent2:#7c5cff;
+      --panel-pad:22px;
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:linear-gradient(135deg,var(--bg1),var(--bg2));color:#111;overflow:hidden}
-    .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
-    .panel{width:100%;max-width:920px;background:rgba(255,255,255,0.95);border-radius:18px;padding:28px;box-shadow:0 20px 50px rgba(20,20,50,0.06);position:relative;overflow:hidden}
-    .heading{font-size:28px;font-weight:900;text-align:center;margin:0 0 8px}
-    .sub{color:#555;text-align:center;margin-bottom:18px}
+    /* Respect iPhone safe area */
+    .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:calc(24px + env(safe-area-inset-top,0)) 18px calc(24px + env(safe-area-inset-bottom,0));}
+    .panel{
+      width:100%;
+      max-width:920px;
+      background:rgba(255,255,255,0.98);
+      border-radius:18px;
+      padding:var(--panel-pad);
+      box-shadow:0 20px 50px rgba(20,20,50,0.06);
+      position:relative;
+      overflow:hidden;
+      /* allow the panel to shrink on smaller screens */
+      max-height: calc(100vh - 48px);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
 
-    .optionsStage{height:420px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
-    .optionBtn{position:absolute;padding:12px 18px;border-radius:999px;border:0;background:linear-gradient(90deg,var(--accent),var(--accent2));color:white;font-weight:800;cursor:pointer;box-shadow:0 10px 26px rgba(124,92,255,0.12);user-select:none;transition:transform 0.4s ease,left 0.4s ease,top 0.4s ease}
-    .optionBtn:active{transform:scale(.95)}
-    .hint{position:absolute;left:50%;transform:translateX(-50%);bottom:16px;color:#666;font-size:13px}
+    .heading{font-size:1.6rem;font-weight:900;text-align:center;margin:0 0 2px}
+    .sub{color:#555;text-align:center;margin:0 0 8px;font-size:0.95rem}
 
-    .wishStage{display:none;flex-direction:column;align-items:center;justify-content:center;padding:36px;text-align:center}
-    .wishTitle{font-size:44px;color:var(--accent);font-weight:900;margin:6px}
-    .cake{font-size:86px;margin-top:8px}
-    .lines{margin-top:20px;display:flex;flex-direction:column;gap:10px;align-items:center}
-    .line{background:linear-gradient(180deg,#fff,#fbfbff);padding:12px 18px;border-radius:12px;max-width:760px;box-shadow:0 6px 18px rgba(20,20,50,0.04);opacity:0;transform:translateY(10px);transition:all 500ms cubic-bezier(.2,.9,.3,1)}
+    /* Make optionsStage responsive using viewport height (works better on mobile) */
+    .optionsStage{
+      height: min(46vh,420px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      overflow:hidden;
+      border-radius:12px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.6), rgba(250,250,255,0.6));
+      padding:8px;
+    }
+
+    .optionBtn{
+      position:absolute;
+      padding:14px 18px;
+      border-radius:999px;
+      border:0;
+      background:linear-gradient(90deg,var(--accent),var(--accent2));
+      color:white;
+      font-weight:800;
+      cursor:pointer;
+      box-shadow:0 10px 26px rgba(124,92,255,0.12);
+      user-select:none;
+      transition:transform 0.35s ease,left 0.35s ease,top 0.35s ease;
+      touch-action:manipulation;
+      font-size:1rem;
+      line-height:1;
+      white-space:nowrap;
+      max-width:82%;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .optionBtn:active{transform:scale(.96)}
+    .hint{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;color:#666;font-size:13px}
+
+    .wishStage{display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;overflow:auto}
+    .wishTitle{font-size:2.25rem;color:var(--accent);font-weight:900;margin:6px}
+    .cake{font-size:5.5rem;margin-top:8px;line-height:1}
+    .lines{margin-top:16px;display:flex;flex-direction:column;gap:10px;align-items:center;width:100%}
+    .line{background:linear-gradient(180deg,#fff,#fbfbff);padding:12px 18px;border-radius:12px;max-width:860px;box-shadow:0 6px 18px rgba(20,20,50,0.04);opacity:0;transform:translateY(10px);transition:all 500ms cubic-bezier(.2,.9,.3,1);font-size:0.98rem}
     .line.show{opacity:1;transform:translateY(0)}
-
-    /* small top controls */
-    .topControls{position:absolute;right:14px;top:14px;z-index:50;display:flex;gap:8px}
-    .tinyBtn{padding:8px 10px;border-radius:8px;border:0;background:rgba(0,0,0,0.06);cursor:pointer;font-weight:700}
 
     /* confetti pieces */
     .confetti{position:absolute;width:10px;height:14px;border-radius:3px;opacity:0.95;transform-origin:center;animation:fall linear forwards}
     @keyframes fall { to { transform: translateY(120vh) rotate(720deg); opacity:0.95 } }
 
-    @media (max-width:640px){ .optionBtn{padding:10px 14px;font-size:14px} .wishTitle{font-size:32px} .optionsStage{height:340px} }
+    /* Small controls removed on mobile; keep layout neat */
+    @media (max-width:640px){
+      .optionBtn{padding:12px 14px;font-size:0.95rem}
+      .wishTitle{font-size:1.65rem}
+      .optionsStage{height:46vh}
+      .cake{font-size:4rem}
+      .panel{padding:16px}
+    }
+
+    /* If the device is extremely short, allow scrolling inside panel */
+    @media (max-height:520px){
+      .panel{max-height:calc(100vh - 20px);overflow:auto}
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="panel" id="panel">
-      <div class="topControls">
-        <button class="tinyBtn" id="changeMusicBtn">Change Music</button>
-      </div>
-
       <h1 class="heading">Whose Birthday Is It??</h1>
       <div class="sub">Watch closely, names move around — only the right one opens the surprise!</div>
 
-      <div class="optionsStage" id="optionsStage"></div>
+      <div class="optionsStage" id="optionsStage" aria-label="Options stage"></div>
 
-      <div class="wishStage" id="wishStage">
+      <div class="wishStage" id="wishStage" aria-hidden="true">
         <div class="wishTitle">Happy Birthday, Punjaban! 🎉</div>
-        <div class="cake">🎂</div>
+        <div class="cake" aria-hidden="true">🎂</div>
         <div class="lines" id="wishLines"></div>
       </div>
 
-      <!-- background audio -->
+      <!-- background audio (kept, but change-music control removed) -->
       <audio id="bgAudio" loop preload="auto" src="https://cdn.pixabay.com/download/audio/2021/10/17/audio_e5f3e1b7b1.mp3?filename=soft-piano-10748.mp3"></audio>
     </div>
   </div>
 
   <script>
-    // options & messages (kept your updated messages)
+    // options & messages
     const allOptions = [
       { label: "It's Ishu's", id: 'ishu' },
       { label: "It's Ishmeet's", id: 'ishmeet' },
@@ -79,14 +136,13 @@
     const wishStage = document.getElementById('wishStage');
     const wishLinesWrap = document.getElementById('wishLines');
     const bgAudio = document.getElementById('bgAudio');
-    const changeMusicBtn = document.getElementById('changeMusicBtn');
 
-    const btnElements = {}; // reused button elements by id
-    let visibleIds = [];    // currently visible ids
-    let clickCounter = 0;   // counts user clicks on any option
-    const PUNJABEN_UNLOCK_AFTER = 5; // number of clicks required before Punjaban can appear
+    const btnElements = {};
+    let visibleIds = [];
+    let clickCounter = 0;
+    const PUNJABEN_UNLOCK_AFTER = 5;
 
-    // create button elements (hidden initially)
+    // create buttons
     function makeButtons(){
       allOptions.forEach(opt=>{
         const b = document.createElement('button');
@@ -97,12 +153,13 @@
         b.style.left = '0px';
         b.style.top = '0px';
         b.addEventListener('click', ()=> onClickOption(opt.id));
+        // ensure touch-friendly focus outlines & accessibility
+        b.setAttribute('aria-label', opt.label);
         optionsStage.appendChild(b);
         btnElements[opt.id] = b;
       });
     }
 
-    // pick 1 or 2 options from the pool (exclude 'punjaban' until unlocked)
     function pickVisibleIds(){
       const pool = allOptions.map(o => o.id).filter(id => {
         if(id === 'punjaban' && clickCounter < PUNJABEN_UNLOCK_AFTER) return false;
@@ -120,7 +177,6 @@
     }
 
     function showIds(ids){
-      // hide everything first
       allOptions.forEach(o => { btnElements[o.id].style.display = 'none'; });
       visibleIds = ids.slice();
       ids.forEach(id => {
@@ -132,17 +188,23 @@
     }
 
     function positionElementRandom(el){
+      // ensure element is measured after layout
       const rect = optionsStage.getBoundingClientRect();
-      const pad = 12;
-      const maxX = Math.max(40, rect.width - el.offsetWidth - pad);
-      const maxY = Math.max(40, rect.height - el.offsetHeight - pad);
-      const nx = pad + Math.random() * maxX;
-      const ny = pad + Math.random() * maxY;
+      // allow small padding relative to stage size
+      const padX = Math.max(8, rect.width * 0.03);
+      const padY = Math.max(8, rect.height * 0.03);
+
+      // clamp maximum width for button so it does not overflow stage
+      el.style.maxWidth = Math.max(120, Math.min(rect.width - padX*2, el.offsetWidth)) + 'px';
+
+      const maxX = Math.max(40, rect.width - el.offsetWidth - padX);
+      const maxY = Math.max(40, rect.height - el.offsetHeight - padY);
+      const nx = padX + Math.random() * maxX;
+      const ny = padY + Math.random() * maxY;
       el.style.left = nx + 'px';
       el.style.top = ny + 'px';
     }
 
-    // gentle drift nudges
     function startDrift(){
       setInterval(()=>{
         visibleIds.forEach(id=>{
@@ -164,7 +226,6 @@
       }, 420);
     }
 
-    // occasional jump
     function startJumps(){
       setInterval(()=>{
         if(visibleIds.length === 0) return;
@@ -177,11 +238,9 @@
       }, 1000 + Math.random()*800);
     }
 
-    // swap visible options periodically (so new names appear)
     function startSwapCycle(){
       setInterval(()=>{
         const next = pickVisibleIds();
-        // if punjaban unlocked and next includes it, fine
         if(JSON.stringify(next) !== JSON.stringify(visibleIds)){
           showIds(next);
         } else {
@@ -190,10 +249,8 @@
       }, 1200 + Math.random()*900);
     }
 
-    // handle clicks: increment counter; if Punjaban clicked open wish
     function onClickOption(id){
       clickCounter++;
-      // playful animation on click
       const el = btnElements[id];
       if(el){
         el.style.transition = 'transform 140ms cubic-bezier(.2,.9,.3,1)';
@@ -201,7 +258,6 @@
         setTimeout(()=> el.style.transform = '', 220);
       }
 
-      // if clicked non-punjaban, nudge another visible button
       if(id !== 'punjaban'){
         const others = visibleIds.filter(x => x !== id);
         if(others.length){
@@ -210,14 +266,12 @@
         }
       }
 
-      // if clicking Punjaban (only possible after unlocking) -> open wish
       if(id === 'punjaban'){
         spawnMiniBurst();
         setTimeout(()=> openWishStage(), 700);
       }
     }
 
-    // small confetti burst
     function spawnMiniBurst(){
       const count = 20;
       for(let i=0;i<count;i++){
@@ -233,7 +287,6 @@
       }
     }
 
-    // open wish stage
     async function openWishStage(){
       visibleIds.forEach(id => {
         const el = btnElements[id];
@@ -247,7 +300,6 @@
       }, 460);
     }
 
-    // show wish and reveal lines
     async function showWish(){
       wishStage.style.display = 'flex';
       wishStage.style.opacity = 0;
@@ -280,23 +332,11 @@
       }
     }
 
-    // change music button: prompt for mp3 URL
-    changeMusicBtn.addEventListener('click', ()=>{
-      const url = prompt('Paste direct MP3 URL (must be CORS-accessible). Leave empty to cancel.', bgAudio.src || '');
-      if(url && url.trim()){
-        bgAudio.src = url.trim();
-        // try to play; user interaction already present (button click)
-        bgAudio.play().catch(()=>{ alert('Could not autoplay selected audio due to browser restrictions.'); });
-      }
-    });
-
     // helper sleep
     function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
     // init
     makeButtons();
-    // show initial visible ids WITHOUT Punjaban
-    // to ensure "fun", force pick excluding punjaban at start
     function pickInitialIds(){
       const pool = allOptions.map(o=>o.id).filter(id=> id !== 'punjaban');
       const count = Math.random()<0.45 ? 2 : 1;
@@ -313,13 +353,12 @@
     startSwapCycle();
     startJumps();
 
-    // ensure Punjaban becomes eligible only after clickCounter >= PUNJABEN_UNLOCK_AFTER:
-    // startSwapCycle already checks clickCounter each interval
+    // try autoplay on load (may be blocked)
+    window.addEventListener('load', ()=> { bgAudio.play().catch(()=>{}); });
 
-    // optional: if user reaches clicks before swap cycle runs, we might show punjaban sooner by forcing a swap after unlock
+    // if unlocked, occasionally bring punjaban in
     setInterval(()=>{
       if(clickCounter >= PUNJABEN_UNLOCK_AFTER && !visibleIds.includes('punjaban')){
-        // 30% chance to immediately shuffle in Punjaban after unlock
         if(Math.random() < 0.3){
           const next = pickVisibleIds();
           showIds(next);
@@ -327,15 +366,16 @@
       }
     }, 600);
 
-    // try autoplay on load (likely blocked); clicking options counts as user gesture
-    window.addEventListener('load', ()=> { bgAudio.play().catch(()=>{}); });
-
-    // reposition on resize
+    // reposition on resize / orientation change
     let _rt = null;
     window.addEventListener('resize', ()=>{ clearTimeout(_rt); _rt = setTimeout(()=> {
       visibleIds.forEach(id => positionElementRandom(btnElements[id]));
     }, 120); });
 
+    // orientationchange for mobile (some browsers report different sizes)
+    window.addEventListener('orientationchange', ()=> {
+      setTimeout(()=> visibleIds.forEach(id => positionElementRandom(btnElements[id])), 250);
+    });
   </script>
 </body>
 </html>
